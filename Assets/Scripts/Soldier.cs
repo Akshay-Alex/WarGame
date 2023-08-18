@@ -170,6 +170,7 @@ public class Soldier : MonoBehaviour
             }
             else
             {
+                ChangeState(State.Idle);
                 Debug.Log("No enemies left");
             }
         }
