@@ -9,5 +9,5 @@ public class SoldierStat : ScriptableObject
     public int _damage;
     public int _damageTime;
     public int _attackTime;
-    public int _delayTime;
+    public float _attackCooldownTime;
 }
