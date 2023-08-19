@@ -5978,7 +5978,7 @@ MonoBehaviour:
   _audioSource: {fileID: 0}
   _sfxSwordHit: {fileID: 8300000, guid: 787fde674fd5ddb46bbc1f07be923c53, type: 3}
   _sfxPoof: {fileID: 8300000, guid: b2561fab6018b2743b3f524afd568dc8, type: 3}
-  _sfxPlay: {fileID: 0}
+  _sfxPlay: {fileID: 8300000, guid: 75cf205c8a52cbe49b033e21586560c4, type: 3}
   _vfxPoof: {fileID: 8086953911498036813, guid: dd2e1c0f5bdf2224898c77a642310180, type: 3}
 --- !u!1 &1135542456
 GameObject:
