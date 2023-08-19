@@ -10,7 +10,21 @@ public class GameManager : MonoBehaviour
     public readonly static HashSet<Soldier> BlueTeam = new HashSet<Soldier>();
     public GameObject RedSoldierPrefab;
     public GameObject BlueSoldierPrefab;
+    public GameObject MenuCanvas;
+    public GameObject InGameMenuCanvas;
+    public Collider SpawnableAreaCollider;
+    public GameState gameState;
+    public enum GameState
+    {
+        InMenu,
+        InPlayMode
+    }
     Camera camera;
+    //coordinate references
+    float minimumXCoordinate;
+    float maximumXCoordinate;
+    float minimumZCoordinate;
+    float maximumZCoordinate;
     void CheckLeftMouseClick()
     {
         if (Mouse.current.leftButton.wasPressedThisFrame)
@@ -19,9 +33,30 @@ public class GameManager : MonoBehaviour
             RaycastHit hit;
             if (Physics.Raycast(ray, out hit))
             {
-                Instantiate(BlueSoldierPrefab, hit.point, Quaternion.identity);
+                if(hit.collider == SpawnableAreaCollider)
+                {
+                    Instantiate(BlueSoldierPrefab, hit.point, Quaternion.identity);
+                }           
             }
         }
+    }
+    public void Play()
+    {
+        ToggleMainMenu(false);
+        ToggleInGameMenu(true);
+        gameState = GameState.InPlayMode;
+    }
+    public void ExitGame()
+    {
+        Application.Quit();
+    }
+    void ToggleMainMenu(bool toggle)
+    {
+        MenuCanvas.SetActive(toggle);
+    }
+    void ToggleInGameMenu(bool toggle)
+    {
+        InGameMenuCanvas.SetActive(toggle);
     }
     void CheckRightMouseClick()
     {
@@ -31,7 +66,10 @@ public class GameManager : MonoBehaviour
             RaycastHit hit;
             if (Physics.Raycast(ray, out hit))
             {
-                Instantiate(RedSoldierPrefab, hit.point, Quaternion.identity);
+                if (hit.collider == SpawnableAreaCollider)
+                {
+                    Instantiate(RedSoldierPrefab, hit.point, Quaternion.identity);
+                }
             }
         }
     }
@@ -39,12 +77,27 @@ public class GameManager : MonoBehaviour
     {
         gameManager = this;
         camera = Camera.main;
+        gameState = GameState.InMenu;
+        FindSpawnableAreaCorners();
+
         //Mouse.current.leftButton.
+    }
+    void FindSpawnableAreaCorners()
+    {
+        Bounds spawnableBounds = SpawnableAreaCollider.bounds;
+         minimumXCoordinate = spawnableBounds.center.x - spawnableBounds.extents.x;
+         maximumXCoordinate = spawnableBounds.center.x + spawnableBounds.extents.x;
+         minimumZCoordinate = spawnableBounds.center.z - spawnableBounds.extents.z;
+         maximumZCoordinate = spawnableBounds.center.z + spawnableBounds.extents.z;
+        Debug.Log("X is from " + minimumXCoordinate + " to " + maximumXCoordinate + " And Z is from " + minimumZCoordinate + " to " + maximumZCoordinate);
     }
     private void Update()
     {
-        CheckLeftMouseClick();
-        CheckRightMouseClick();
+        if(gameState == GameState.InPlayMode)
+        {
+            CheckLeftMouseClick();
+            CheckRightMouseClick();
+        } 
     }
     
 }

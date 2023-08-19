@@ -23,6 +23,7 @@ public class Soldier : MonoBehaviour
     public State _currentState;
 
     public SoldierStat soldierStat;
+    public HealthBar healthBar;
     public int _health;
     public int _damage;
     public int _damageTime;
@@ -36,7 +37,7 @@ public class Soldier : MonoBehaviour
     //test variables
     public bool _isEnemyNear;
     public bool _canAttack;
-
+    float _maxHealth;
 
     string IdleAnimation = "Idle";
     string RunningAnimation = "Running";
@@ -49,6 +50,7 @@ public class Soldier : MonoBehaviour
     void InitializeStats()
     {
         _health = soldierStat._health;
+        _maxHealth = _health;
         _damage = soldierStat._damage;
         _damageTime = soldierStat._damageTime;
     }
@@ -117,15 +119,22 @@ public class Soldier : MonoBehaviour
     public void ReceiveDamage(int damage)
     {
         ChangeState(State.ReceivingDamage);
-        //ReceiveDamageAsync().GetAwaiter().GetResult();
         _health -= damage;
+        healthBar.UpdateHealthBar(_health / _maxHealth);
         if(_health <= 0)
         {
             Die();
+            
+        }
+        else
+        {
+            FxManager.fxManager.PlaySFXAudio(FxManager.fxManager._sfxSwordHit);
         }
     }
     void Die()
     {
+        FxManager.fxManager.PlaySFXAudio(FxManager.fxManager._sfxPoof);
+        FxManager.fxManager.PlayVFX(FxManager.fxManager._vfxPoof,transform.position);
         Destroy(this.gameObject);
     }
 
@@ -170,8 +179,10 @@ public class Soldier : MonoBehaviour
             }
             else
             {
+                //_aIPath.StopAllCoroutines();
+                _destinationSetter.target = this.transform; //this is to stop soldiers moving when target has been destroyed
                 ChangeState(State.Idle);
-                Debug.Log("No enemies left");
+                //Debug.Log("No enemies left");
             }
         }
 
