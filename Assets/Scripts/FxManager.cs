@@ -7,6 +7,7 @@ public class FxManager : MonoBehaviour
     public AudioSource _audioSource;
     public AudioClip _sfxSwordHit;
     public AudioClip _sfxPoof;
+    public AudioClip _sfxPlay;
     public static FxManager fxManager;
     public GameObject _vfxPoof;
     // Start is called before the first frame update
