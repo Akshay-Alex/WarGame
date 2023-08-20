@@ -19,13 +19,7 @@ public class HealthBar : MonoBehaviour
     {
         bar.value = normalizedHealth;
     }
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
 
-    // Update is called once per frame
     void Update()
     {
         LookAtCamera();

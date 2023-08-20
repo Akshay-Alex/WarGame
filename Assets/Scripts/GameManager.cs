@@ -1,11 +1,10 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using Pathfinding;
 
 public class GameManager : MonoBehaviour
 {
+    #region Public properties
     public static GameManager gameManager;
     public readonly static HashSet<Soldier> RedTeam = new HashSet<Soldier>();
     public readonly static HashSet<Soldier> BlueTeam = new HashSet<Soldier>();
@@ -13,9 +12,9 @@ public class GameManager : MonoBehaviour
     public GameObject BlueSoldierPrefab;
     public GameObject Obstacle;
     public GameObject Astar;
-    Cell[,] grid;
     public GameObject MenuCanvas;
     public GameObject InGameMenuCanvas;
+    public GameObject HelpTextCanvas;
     public Collider SpawnableAreaCollider;
     public GameState gameState;
     [Range(0f, .5f)]
@@ -25,6 +24,9 @@ public class GameManager : MonoBehaviour
         InMenu,
         InPlayMode
     }
+    #endregion
+
+    #region Private properties
     Camera camera;
     //coordinate references
     float minimumXCoordinate;
@@ -32,6 +34,9 @@ public class GameManager : MonoBehaviour
     float minimumZCoordinate;
     float maximumZCoordinate;
     float obstacleXLength, obstacleZLength;
+    #endregion
+
+    #region Private functions
     void CheckLeftMouseClick()
     {
         if (Mouse.current.leftButton.wasPressedThisFrame)
@@ -40,23 +45,12 @@ public class GameManager : MonoBehaviour
             RaycastHit hit;
             if (Physics.Raycast(ray, out hit))
             {
-                if(hit.collider == SpawnableAreaCollider)
+                if (hit.collider == SpawnableAreaCollider)
                 {
                     Instantiate(BlueSoldierPrefab, hit.point, Quaternion.identity);
-                }           
+                }
             }
         }
-    }
-    public void Play()
-    {
-        FxManager.fxManager.PlaySFXAudio(FxManager.fxManager._sfxPlay);
-        ToggleMainMenu(false);
-        ToggleInGameMenu(true);
-        gameState = GameState.InPlayMode;
-    }
-    public void ExitGame()
-    {
-        Application.Quit();
     }
     void ToggleMainMenu(bool toggle)
     {
@@ -81,6 +75,53 @@ public class GameManager : MonoBehaviour
             }
         }
     }
+    void CalculateBounds()
+    {
+        Bounds spawnableAreaBounds = SpawnableAreaCollider.bounds;
+        minimumXCoordinate = spawnableAreaBounds.center.x - spawnableAreaBounds.extents.x;
+        maximumXCoordinate = spawnableAreaBounds.center.x + spawnableAreaBounds.extents.x;
+        minimumZCoordinate = spawnableAreaBounds.center.z - spawnableAreaBounds.extents.z;
+        maximumZCoordinate = spawnableAreaBounds.center.z + spawnableAreaBounds.extents.z;
+        Bounds obstacleBounds = Obstacle.GetComponentInChildren<Collider>().bounds;
+        obstacleXLength = obstacleBounds.size.x;
+        obstacleZLength = obstacleBounds.size.z;
+        Debug.Log("Obstacle dimensions " + obstacleXLength + " " + obstacleZLength);
+    }
+    void GenerateObstacles()
+    {
+        for (float XCoordinate = minimumXCoordinate; XCoordinate <= maximumXCoordinate; XCoordinate += obstacleXLength)
+            for (float ZCoordinate = minimumZCoordinate; ZCoordinate <= maximumZCoordinate; ZCoordinate += obstacleZLength)
+            {
+                if (ObstacleDensity > Random.Range(0f, 1f))
+                {
+                    Instantiate(Obstacle, new Vector3(XCoordinate, SpawnableAreaCollider.transform.position.y, ZCoordinate), Quaternion.identity);
+                }
+
+            }
+
+    }
+    #endregion
+
+    #region Public functions
+    public void ToggleHelpText()
+    {
+        FxManager.fxManager.PlaySFXAudio(FxManager.fxManager._sfxClick);
+        HelpTextCanvas.SetActive(!HelpTextCanvas.activeSelf);
+    }
+    public void Play()
+    {
+        FxManager.fxManager.PlaySFXAudio(FxManager.fxManager._sfxPlay);
+        ToggleMainMenu(false);
+        ToggleInGameMenu(true);
+        gameState = GameState.InPlayMode;
+    }
+    public void ExitGame()
+    {
+        Application.Quit();
+    }
+    #endregion
+
+    #region Unity functions
     private void Start()
     {
         gameManager = this;
@@ -92,38 +133,16 @@ public class GameManager : MonoBehaviour
 
         //Mouse.current.leftButton.
     }
-    void CalculateBounds()
-    {
-        Bounds spawnableAreaBounds = SpawnableAreaCollider.bounds;
-         minimumXCoordinate = spawnableAreaBounds.center.x - spawnableAreaBounds.extents.x;
-         maximumXCoordinate = spawnableAreaBounds.center.x + spawnableAreaBounds.extents.x;
-         minimumZCoordinate = spawnableAreaBounds.center.z - spawnableAreaBounds.extents.z;
-         maximumZCoordinate = spawnableAreaBounds.center.z + spawnableAreaBounds.extents.z;
-        Bounds obstacleBounds = Obstacle.GetComponentInChildren<Collider>().bounds;
-        obstacleXLength = obstacleBounds.size.x;
-        obstacleZLength = obstacleBounds.size.z;
-        Debug.Log("Obstacle dimensions " + obstacleXLength + " " + obstacleZLength);
-    }
-    public void GenerateObstacles()
-    {
-        for(float XCoordinate = minimumXCoordinate; XCoordinate <= maximumXCoordinate; XCoordinate += obstacleXLength )
-            for(float ZCoordinate = minimumZCoordinate; ZCoordinate <= maximumZCoordinate; ZCoordinate += obstacleZLength)
-            {
-                if(ObstacleDensity > Random.Range(0f,1f))
-                {
-                    Instantiate(Obstacle, new Vector3(XCoordinate, SpawnableAreaCollider.transform.position.y, ZCoordinate), Quaternion.identity);
-                }
-                
-            }
 
-    }
+
     private void Update()
     {
-        if(gameState == GameState.InPlayMode)
+        if (gameState == GameState.InPlayMode)
         {
             CheckLeftMouseClick();
             CheckRightMouseClick();
-        } 
+        }
     }
-    
+    #endregion
 }
+
