@@ -21,7 +21,7 @@ public class Soldier : MonoBehaviour
         Attacking,
         ReceivingDamage
     }
-
+    public int _soldierID;
     public State _currentState;
     public SoldierStat soldierStat;
     public HealthBar healthBar;
@@ -78,7 +78,7 @@ public class Soldier : MonoBehaviour
     {
         if (_currentState == State.Attacking) //this check is used to avoid both soldiers getting damaged
         {
-            _currentEnemy.ReceiveDamage(_damage);
+            _currentEnemy.ReceiveDamage(_damage,this);
         }
     }
 
@@ -166,7 +166,7 @@ public class Soldier : MonoBehaviour
         //ChangeState(State.Idle);
         //enemy.ReceiveDamage(_damage);
     }
-    public void ReceiveDamage(int damage)
+    public void ReceiveDamage(int damage,Soldier attacker)
     {
         ChangeState(State.ReceivingDamage);
         _health -= damage;
@@ -174,7 +174,8 @@ public class Soldier : MonoBehaviour
         if (_health <= 0)
         {
             Die();
-
+            GameManager.gameManager.SoldierKilledEvent.Invoke(this, attacker);
+            GameManager.gameManager.ScoreUpdatedEvent.Invoke(attacker._team);
         }
         else
         {

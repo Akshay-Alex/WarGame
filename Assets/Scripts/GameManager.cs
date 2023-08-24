@@ -1,9 +1,27 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Events;
 
 public class GameManager : MonoBehaviour
 {
+    #region Public events
+    public class CustomSoldierSpawnedEvent : UnityEvent<int, Soldier.Team, Vector3>
+    {
+    }
+    /// <summary>
+    /// first argument is the soldier that is killed and second argument is the attacker.
+    /// </summary>
+    public class CustomSoldierKilledEvent : UnityEvent<Soldier,Soldier>
+    {
+    }
+    public class CustomScoreUpdatedEvent : UnityEvent<Soldier.Team>
+    {
+    }
+    public CustomSoldierSpawnedEvent SoldierSpawnedEvent = new CustomSoldierSpawnedEvent();
+    public CustomSoldierKilledEvent SoldierKilledEvent = new CustomSoldierKilledEvent();
+    public CustomScoreUpdatedEvent ScoreUpdatedEvent = new CustomScoreUpdatedEvent();
+    #endregion
     #region Public properties
     public static GameManager gameManager;
     public readonly static HashSet<Soldier> RedTeam = new HashSet<Soldier>();
@@ -16,6 +34,7 @@ public class GameManager : MonoBehaviour
     public GameObject InGameMenuCanvas;
     public GameObject HelpTextCanvas;
     public Collider SpawnableAreaCollider;
+    public int _redTeamScore = 0, _blueTeamScore = 0;
     public GameState gameState;
     [Range(0f, .5f)]
     public float ObstacleDensity;
@@ -34,6 +53,7 @@ public class GameManager : MonoBehaviour
     float minimumZCoordinate;
     float maximumZCoordinate;
     float obstacleXLength, obstacleZLength;
+    int redSoldierCount = 0, blueSoldierCount = 0;
     #endregion
 
     #region Private functions
@@ -47,18 +67,10 @@ public class GameManager : MonoBehaviour
             {
                 if (hit.collider == SpawnableAreaCollider)
                 {
-                    Instantiate(BlueSoldierPrefab, hit.point, Quaternion.identity);
+                    SpawnBlueSoldier(hit);             
                 }
             }
         }
-    }
-    void ToggleMainMenu(bool toggle)
-    {
-        MenuCanvas.SetActive(toggle);
-    }
-    void ToggleInGameMenu(bool toggle)
-    {
-        InGameMenuCanvas.SetActive(toggle);
     }
     void CheckRightMouseClick()
     {
@@ -70,11 +82,34 @@ public class GameManager : MonoBehaviour
             {
                 if (hit.collider == SpawnableAreaCollider)
                 {
-                    Instantiate(RedSoldierPrefab, hit.point, Quaternion.identity);
+                    SpawnRedSoldier(hit);
                 }
             }
         }
     }
+    void SpawnBlueSoldier(RaycastHit hit)
+    {
+        var soldier = Instantiate(BlueSoldierPrefab, hit.point, Quaternion.identity);
+        soldier.GetComponent<Soldier>()._soldierID = blueSoldierCount;
+        SoldierSpawnedEvent.Invoke(blueSoldierCount, Soldier.Team.Blue, hit.point);
+        blueSoldierCount++;
+    }
+    void SpawnRedSoldier(RaycastHit hit)
+    {
+        var soldier = Instantiate(RedSoldierPrefab, hit.point, Quaternion.identity);
+        soldier.GetComponent<Soldier>()._soldierID = redSoldierCount;
+        SoldierSpawnedEvent.Invoke(redSoldierCount, Soldier.Team.Red, hit.point);
+        redSoldierCount++;
+    }
+    void ToggleMainMenu(bool toggle)
+    {
+        MenuCanvas.SetActive(toggle);
+    }
+    void ToggleInGameMenu(bool toggle)
+    {
+        InGameMenuCanvas.SetActive(toggle);
+    }
+    
     void CalculateBounds()
     {
         Bounds spawnableAreaBounds = SpawnableAreaCollider.bounds;
@@ -111,6 +146,7 @@ public class GameManager : MonoBehaviour
     public void Play()
     {
         FxManager.fxManager.PlaySFXAudio(FxManager.fxManager._sfxPlay);
+        EventManager.eventManager.SubscribeToGameEvents();
         ToggleMainMenu(false);
         ToggleInGameMenu(true);
         gameState = GameState.InPlayMode;
@@ -119,12 +155,18 @@ public class GameManager : MonoBehaviour
     {
         Application.Quit();
     }
+    public void IncreaseScore(Soldier.Team team)
+    {
+        if (team == Soldier.Team.Red)
+            _redTeamScore += 10;
+        else
+            _blueTeamScore += 10;
+    }
     #endregion
 
     #region Unity functions
     private void Start()
     {
-        gameManager = this;
         camera = Camera.main;
         gameState = GameState.InMenu;
         CalculateBounds();
@@ -133,7 +175,10 @@ public class GameManager : MonoBehaviour
 
         //Mouse.current.leftButton.
     }
-
+    private void OnEnable()
+    {
+        gameManager = this;
+    }
 
     private void Update()
     {
