@@ -21,11 +21,13 @@ public class EventManager : MonoBehaviour
     #region Public functions
     public void ToggleEventsPanel()
     {
+        FxManager.fxManager.PlaySFXAudio(FxManager.fxManager._sfxClick);
         _eventsPanel.SetActive(!_eventsPanel.activeSelf);
         ScrollToBottom();
     }
     public void CloseEventsPanel()
     {
+        FxManager.fxManager.PlaySFXAudio(FxManager.fxManager._sfxClick);
         _eventsPanel.SetActive(false);
     }
     public void SubscribeToGameEvents()
